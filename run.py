@@ -2,10 +2,15 @@ import argparse
 import azureml.core
 from azureml.core import Workspace, Experiment
 import logging, os
+from azureml.core.authentication import ServicePrincipalAuthentication
 
 print("SDK version:", azureml.core.VERSION)
 
 logging.getLogger("azure").setLevel(logging.DEBUG)
+
+# load .env file without dotenv package
+from dotenv import load_dotenv
+load_dotenv()
 
 #Enter details of your AzureML workspace
 subscription_id = os.getenv("AZURE_SUBSCRIPTION_ID")
@@ -19,8 +24,16 @@ if resource_group is None:
 if workspace_name is None:
     raise ValueError("Set AZURE_WORKSPACE_NAME environment variable")
 
+cli_auth = ServicePrincipalAuthentication(
+    tenant_id=os.getenv("AZURE_TENANT_ID"),
+    service_principal_id=os.getenv("AZURE_CLIENT_ID"),
+    service_principal_password=os.getenv("AZURE_CLIENT_SECRET"),
+)
 
-ws = Workspace.get(name=workspace_name, subscription_id=subscription_id, resource_group=resource_group)
+ws = Workspace.get(name=workspace_name,
+                   subscription_id=subscription_id, 
+                   resource_group=resource_group,
+                   auth=cli_auth)
 
 from azureml.core.compute import ComputeTarget, AmlCompute
 from azureml.core.compute_target import ComputeTargetException
