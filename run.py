@@ -41,6 +41,7 @@ from azureml.core.compute_target import ComputeTargetException
 # Parse command-line arguments
 parser = argparse.ArgumentParser()
 parser.add_argument('--alpha', type=float, default=0.03, help='Alpha value for Ridge regression')
+parser.add_argument('--experiment_name', type=str, help='Experiment name', required=True)
 args = parser.parse_args()
 
 # Choose a name for your CPU cluster
@@ -67,8 +68,7 @@ except ComputeTargetException:
 
 from azureml.core import Experiment
 
-experiment_name = "RemoteTrain-with-mlflow-sample"
-exp = Experiment(workspace=ws, name=experiment_name)
+exp = Experiment(workspace=ws, name=args.experiment_name)
 
 training_script = 'train_diabetes.py'
 with open(training_script, 'r') as f:
@@ -94,6 +94,11 @@ src = ScriptRunConfig(source_directory=".",
                       script=training_script,
                       compute_target=cpu_cluster,
                       environment=env)
+
+import mlflow 
+#   # Get the current tracking uri
+# tracking_uri = mlflow.get_tracking_uri()
+print(f"Current tracking uri: {ws.get_mlflow_tracking_uri()}")
 
 run = exp.submit(src)
 run.wait_for_completion(show_output=True)
