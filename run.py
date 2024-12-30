@@ -42,6 +42,7 @@ from azureml.core.compute_target import ComputeTargetException
 parser = argparse.ArgumentParser()
 parser.add_argument('--alpha', type=float, default=0.03, help='Alpha value for Ridge regression')
 parser.add_argument('--experiment_name', type=str, help='Experiment name', required=True)
+parser.add_argument('--run_id', type=str, help='Run ID', required=True)
 args = parser.parse_args()
 
 # Choose a name for your CPU cluster
@@ -67,8 +68,10 @@ except ComputeTargetException:
 
 
 from azureml.core import Experiment
+from azureml.core import Run
 
 exp = Experiment(workspace=ws, name=args.experiment_name)
+run = Run(exp, run_id=args.run_id)
 
 training_script = 'train_diabetes.py'
 with open(training_script, 'r') as f:
@@ -90,7 +93,7 @@ env.python.conda_dependencies = cd
 from azureml.core import ScriptRunConfig
 
 src = ScriptRunConfig(source_directory=".",
-                      arguments=["--alpha", args.alpha],
+                      arguments=["--alpha", args.alpha, "--run_id", args.run_id],
                       script=training_script,
                       compute_target=cpu_cluster,
                       environment=env)
